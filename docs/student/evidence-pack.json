@@ -1,0 +1,163 @@
+{
+  "claims": {
+    "C01": {
+      "settle_from": [
+        "R01_weak_gate_roll_forward"
+      ],
+      "text": "After the weakly gated rollout returned, the first request saw a readiness failure from the candidate build."
+    },
+    "C02": {
+      "settle_from": [],
+      "text": "Users kept receiving responses while the api container was recreated."
+    },
+    "C03": {
+      "settle_from": [
+        "R03_roll_back"
+      ],
+      "text": "The rollback restored the known-good build version."
+    },
+    "C04": {
+      "settle_from": [
+        "R02_ready_gate_roll_forward",
+        "R06_health_checks"
+      ],
+      "text": "The readiness gate held the rollout open until the candidate had finished warming up."
+    },
+    "C05": {
+      "settle_from": [],
+      "text": "The memory limit kept the api container below 512 MiB under load."
+    }
+  },
+  "pack_id": "sprint3-task31-release-v1",
+  "provenance": {
+    "capture_environment": "Docker Compose project coldline-task-3-1 on one Windows host with Docker Desktop; eight long-running containers plus the one-shot initializer; no user traffic during the rollouts.",
+    "capture_method": [
+      "poe roll-forward with the supplied liveness health check still in place (R01)",
+      "poe roll-forward after the health check probed /health/ready with start_period 30s (R02)",
+      "docker compose ps --format json while the candidate was running (R04)",
+      "poe roll-back (R03)",
+      "poe release-status after limits were declared (R05)",
+      "docker compose config --format json for the weak and repaired Compose files (R06)"
+    ],
+    "captured_at": "2026-09-17T10:07:42+00:00",
+    "kind": "captured-local-runtime-and-configuration",
+    "limits": [
+      "compose_wait_seconds and timestamps are single observations from one host, not averages.",
+      "No request was sent during the container recreate window, so nothing here shows what a user would have experienced during the swap.",
+      "No memory sample under load was taken; the limits are declared values Docker applied, not evidence of what they prevented.",
+      "Image tags name local builds on this host, not registry digests."
+    ],
+    "runtime_checkpoint": "Task 3.1 reference completion: pinned images coldline-api and coldline-worker, manifest releases 3.1.0 (known_good) and 3.1.1 (candidate, 20 s readiness warm-up)."
+  },
+  "records": {
+    "R01_weak_gate_roll_forward": {
+      "compose_wait_seconds": 13.2,
+      "first_probe": {
+        "build_version": "3.1.1",
+        "ready_status": 503
+      },
+      "health_check_probe": "/health/live",
+      "kind": "rollout-record",
+      "release": "candidate",
+      "requested_tag": "3.1.1",
+      "running_images": {
+        "api": "coldline-api:3.1.1",
+        "worker": "coldline-worker:3.1.1"
+      }
+    },
+    "R02_ready_gate_roll_forward": {
+      "compose_wait_seconds": 33.0,
+      "first_probe": {
+        "build_version": "3.1.1",
+        "ready_status": 200
+      },
+      "health_check_probe": "/health/ready",
+      "kind": "rollout-record",
+      "release": "candidate",
+      "requested_tag": "3.1.1",
+      "running_images": {
+        "api": "coldline-api:3.1.1",
+        "worker": "coldline-worker:3.1.1"
+      }
+    },
+    "R03_roll_back": {
+      "compose_wait_seconds": 11.4,
+      "first_probe": {
+        "build_version": "3.1.0",
+        "ready_status": 200
+      },
+      "health_check_probe": "/health/ready",
+      "kind": "rollout-record",
+      "release": "known_good",
+      "requested_tag": "3.1.0",
+      "running_images": {
+        "api": "coldline-api:3.1.0",
+        "worker": "coldline-worker:3.1.0"
+      }
+    },
+    "R04_running_images_after_candidate": {
+      "kind": "compose-ps",
+      "services": [
+        {
+          "health": "healthy",
+          "image": "coldline-api:3.1.1",
+          "service": "api",
+          "state": "running"
+        },
+        {
+          "health": "healthy",
+          "image": "coldline-worker:3.1.1",
+          "service": "worker",
+          "state": "running"
+        }
+      ]
+    },
+    "R05_applied_limits": {
+      "kind": "docker-inspect-hostconfig",
+      "limits": [
+        {
+          "image": "coldline-api:3.1.0",
+          "memory_bytes": 536870912,
+          "nano_cpus": 1000000000,
+          "service": "api"
+        },
+        {
+          "image": "coldline-worker:3.1.0",
+          "memory_bytes": 268435456,
+          "nano_cpus": 500000000,
+          "service": "worker"
+        }
+      ]
+    },
+    "R06_health_checks": {
+      "kind": "compose-config",
+      "repaired": {
+        "healthcheck": {
+          "interval": "3s",
+          "retries": 20,
+          "start_period": "30s",
+          "test": [
+            "CMD",
+            "python",
+            "-c",
+            "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=2)"
+          ],
+          "timeout": "3s"
+        }
+      },
+      "weak": {
+        "healthcheck": {
+          "interval": "3s",
+          "retries": 20,
+          "test": [
+            "CMD",
+            "python",
+            "-c",
+            "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=2)"
+          ],
+          "timeout": "3s"
+        }
+      }
+    }
+  }
+}

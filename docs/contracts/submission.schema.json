@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Coldline Task 3.1 public answer contract. Four release identities read from the manifest and from the student's own rollout, four applied resource limits read from the running containers, and six bounded interpretations of the supplied rollout evidence pack. The runtime checks compare the release and limit answers with the delivered Compose file and the running stack; the protected check compares the evidence answers with the pack. There is no self-attestation field, no pass boolean, and no recording URL.",
+  "title": "Coldline Task 3.1 answers",
+  "description": "Pinned release, applied limits, observed rollout, and evidence-pack interpretations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["answers"],
+  "properties": {
+    "answers": {
+      "description": "The only top-level answer mapping accepted by the public verifier.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "known_good_tag",
+        "candidate_tag",
+        "observed_candidate_version",
+        "observed_rollback_version",
+        "api_memory_limit_mib",
+        "api_cpu_limit",
+        "worker_memory_limit_mib",
+        "worker_cpu_limit",
+        "weak_gate_first_probe_status",
+        "ready_gate_first_probe_status",
+        "claim_classifications",
+        "fidelity_limitation"
+      ],
+      "properties": {
+        "known_good_tag": {
+          "description": "The known-good release tag exactly as infra/release/manifest.yaml states it.",
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "candidate_tag": {
+          "description": "The candidate release tag exactly as infra/release/manifest.yaml states it.",
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "observed_candidate_version": {
+          "description": "The build_version the first probe reported after `poe roll-forward` returned in your own run.",
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "observed_rollback_version": {
+          "description": "The build_version the first probe reported after `poe roll-back` returned in your own run.",
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "api_memory_limit_mib": {
+          "description": "The memory limit Docker applied to the api container, in whole MiB, as `poe release-status` reports it.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "api_cpu_limit": {
+          "description": "The CPU limit Docker applied to the api container, in CPUs.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "worker_memory_limit_mib": {
+          "description": "The memory limit Docker applied to the worker container, in whole MiB.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "worker_cpu_limit": {
+          "description": "The CPU limit Docker applied to the worker container, in CPUs.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "weak_gate_first_probe_status": {
+          "description": "In the supplied pack, the HTTP status the first readiness probe saw after the weakly gated rollout returned.",
+          "enum": [200, 503]
+        },
+        "ready_gate_first_probe_status": {
+          "description": "In the supplied pack, the HTTP status the first readiness probe saw after the readiness-gated rollout returned.",
+          "enum": [200, 503]
+        },
+        "claim_classifications": {
+          "description": "One classification per supplied claim, from the pack's records alone.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["C01", "C02", "C03", "C04", "C05"],
+          "properties": {
+            "C01": {"enum": ["observation", "inference", "not-established"]},
+            "C02": {"enum": ["observation", "inference", "not-established"]},
+            "C03": {"enum": ["observation", "inference", "not-established"]},
+            "C04": {"enum": ["observation", "inference", "not-established"]},
+            "C05": {"enum": ["observation", "inference", "not-established"]}
+          }
+        },
+        "fidelity_limitation": {
+          "description": "One limitation of this local rollout evidence relative to a managed deployment.",
+          "enum": [
+            "single_replica_recreate",
+            "local_tag_not_registry_digest",
+            "host_docker_scheduling",
+            "no_load_during_rollout"
+          ]
+        }
+      }
+    }
+  }
+}
