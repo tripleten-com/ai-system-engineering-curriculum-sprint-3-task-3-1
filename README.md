@@ -154,8 +154,8 @@ orientation.
 3. `infra/release/manifest.yaml` — the two releases and the resource bounds.
 4. `compose.yaml` — the file you change: image names, the API health check, resource limits.
 5. [`docs/student/evidence-guide.md`](docs/student/evidence-guide.md) and
-   `docs/student/evidence-pack.json` — the supplied rollout evidence behind the six graded
-   evidence answers.
+   `docs/student/evidence-pack.json` — the supplied rollout evidence for two probe-status
+   values, five claim classifications, and one fidelity limitation.
 6. `docs/student/task-3-1-release-record.md` — where your own rollout evidence goes.
 
 The application source lives in five flat packages:
@@ -230,8 +230,9 @@ Dockerfiles, and the application source.
 See **Task 1: Reproducible release** in your course platform for the full walkthrough. In outline:
 build both releases, name the three first-party images from the manifest, roll forward and watch
 the first probe fail behind the supplied health check, repair the gate, roll forward and back
-again, add resource limits inside the published bounds, record what you observed, answer the six
-evidence questions from the pack, run `poe verify`, and open your pull request.
+again, add resource limits inside the published bounds, record what you observed, fill in the
+two probe-status values, five claim classifications, and one fidelity limitation from the pack,
+run `poe verify`, and open your pull request.
 
 ## Operational limits
 
