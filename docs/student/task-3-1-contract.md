@@ -15,7 +15,7 @@ and classify the supplied rollout evidence. You write no application code.
 | Docker applied memory and CPU limits inside the published bounds, and your answers record them | Automated, in this repository, against the running containers |
 | Rolling forward returns only when the candidate is ready, the candidate answers, and the exception workflow completes | Automated, in this repository, by performing the rollout |
 | Rolling back restores the known-good build and the workflow completes | Automated, in this repository, by performing the rollback |
-| Your six interpretations of the supplied evidence pack | Protected automated check |
+| Your two probe-status values, five claim classifications, and one fidelity limitation from the supplied evidence pack | Protected automated check |
 | Your release record and your reasoning | Your instructor, at the Instructor Review and the Project Defense |
 
 ## The three steps
@@ -46,8 +46,9 @@ Size them from the post-readiness samples in `docs/fidelity/local-runtime.md`. R
 
 `docs/student/evidence-pack.json` holds two captured rollouts, one behind the supplied health
 check and one behind a readiness gate, plus a rollback record and the applied limits from the
-reference run. Read `docs/student/evidence-guide.md`, then answer the six evidence fields from
-the pack alone. Your own run is the material for the release record and the defense.
+reference run. Read `docs/student/evidence-guide.md`, then fill in the two probe-status values,
+five claim classifications, and one fidelity limitation from the pack alone. Your own run is
+the material for the release record and the defense.
 
 ## Commands
 

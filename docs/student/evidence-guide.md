@@ -1,7 +1,7 @@
 # Task 3.1 evidence guide
 
-Use [the supplied rollout evidence pack](evidence-pack.json) for the six graded evidence
-answers. Perform your own rollout and rollback for the release record and the Project
+Use [the supplied rollout evidence pack](evidence-pack.json) for the two probe-status values,
+five claim classifications, and one fidelity limitation. Perform your own rollout and rollback for the release record and the Project
 Defense; passing the evidence answers does not replace the runtime checks of your Compose file.
 
 ## What the pack contains
