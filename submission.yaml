@@ -56,4 +56,5 @@ answers:
   # - local_tag_not_registry_digest: the tag names a local build, not a registry digest another host could pull.
   # - host_docker_scheduling: one host's Docker scheduling stands in for a cluster scheduler.
   # - no_load_during_rollout: the rollout was observed without user traffic.
+  # Any option the pack's provenance states is accepted.
   fidelity_limitation: ""
