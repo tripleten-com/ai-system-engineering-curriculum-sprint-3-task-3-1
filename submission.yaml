@@ -16,44 +16,44 @@
 answers:
   # Task 3.1 — Step 1: Pin the release
   # Source: infra/release/manifest.yaml. Copy the two tags exactly as written there.
-  known_good_tag: ""
-  candidate_tag: ""
+  known_good_tag: "3.1.0"
+  candidate_tag: "3.1.1"
 
   # Task 3.1 — Step 2: Roll forward and back through the health gate
   # Source: your own runs of `poe roll-forward` and `poe roll-back`. Record the
   # `build_version` the first probe reported after each command returned.
-  observed_candidate_version: ""
-  observed_rollback_version: ""
+  observed_candidate_version: "3.1.1"
+  observed_rollback_version: "3.1.0"
 
   # Task 3.1 — Step 3: Bound the resources
   # Source: `poe release-status`, the `limits` block. Record the applied limits in
   # whole MiB and in CPUs (for example 512 and 1.0), inside the manifest's bounds.
-  api_memory_limit_mib: 0
-  api_cpu_limit: 0
-  worker_memory_limit_mib: 0
-  worker_cpu_limit: 0
+  api_memory_limit_mib: 512
+  api_cpu_limit: 1.0
+  worker_memory_limit_mib: 256
+  worker_cpu_limit: 0.5
 
   # Task 3.1 — Supplied rollout evidence
   # Source: docs/student/evidence-pack.json and docs/student/evidence-guide.md.
   # Read the two captured rollout records and enter the HTTP status the first probe
   # saw in each (200 or 503). These are the pack's captures, not your own run.
-  weak_gate_first_probe_status: 0
-  ready_gate_first_probe_status: 0
+  weak_gate_first_probe_status: 503
+  ready_gate_first_probe_status: 200
 
   # Classify each supplied claim from the pack's records alone (use exact strings):
   # - observation: a record in the pack shows it directly.
   # - inference: it follows from records plus the configuration, but no record shows it.
   # - not-established: the pack contains no evidence that could settle it.
   claim_classifications:
-    C01: ""
-    C02: ""
-    C03: ""
-    C04: ""
-    C05: ""
+    C01: "observation"
+    C02: "not-established"
+    C03: "observation"
+    C04: "inference"
+    C05: "not-established"
 
   # One limitation of this local rollout evidence (use exact strings):
   # - single_replica_recreate: Compose recreates the one container; no second replica serves meanwhile.
   # - local_tag_not_registry_digest: the tag names a local build, not a registry digest another host could pull.
   # - host_docker_scheduling: one host's Docker scheduling stands in for a cluster scheduler.
   # - no_load_during_rollout: the rollout was observed without user traffic.
-  fidelity_limitation: ""
+  fidelity_limitation: "local_tag_not_registry_digest"
