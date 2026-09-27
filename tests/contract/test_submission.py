@@ -31,25 +31,26 @@ SCHEMA = ROOT / "docs/contracts/submission.schema.json"
 
 def valid_answers(**overrides: Any) -> dict[str, object]:
     """Return a complete answer sheet in the published shape."""
+    # Fictional format example: these values show the shape and state no result.
     answers: dict[str, Any] = {
-        "known_good_tag": "3.1.0",
-        "candidate_tag": "3.1.1",
-        "observed_candidate_version": "3.1.1",
-        "observed_rollback_version": "3.1.0",
-        "api_memory_limit_mib": 512,
-        "api_cpu_limit": 1.0,
-        "worker_memory_limit_mib": 256,
-        "worker_cpu_limit": 0.5,
-        "weak_gate_first_probe_status": 503,
-        "ready_gate_first_probe_status": 200,
+        "known_good_tag": "4.2.0",
+        "candidate_tag": "4.2.1",
+        "observed_candidate_version": "4.2.1",
+        "observed_rollback_version": "4.2.0",
+        "api_memory_limit_mib": 2048,
+        "api_cpu_limit": 3.0,
+        "worker_memory_limit_mib": 1024,
+        "worker_cpu_limit": 3.0,
+        "weak_gate_first_probe_status": 200,
+        "ready_gate_first_probe_status": 503,
         "claim_classifications": {
-            "C01": "observation",
-            "C02": "not-established",
-            "C03": "observation",
-            "C04": "inference",
-            "C05": "not-established",
+            "C01": "inference",
+            "C02": "observation",
+            "C03": "not-established",
+            "C04": "observation",
+            "C05": "inference",
         },
-        "fidelity_limitation": "single_replica_recreate",
+        "fidelity_limitation": "host_docker_scheduling",
     }
     answers.update(overrides)
     return {"answers": answers}
@@ -92,7 +93,7 @@ def test_blank_template_fails_with_field_address(tmp_path: Path) -> None:
         ({"api_memory_limit_mib": 0}, "api_memory_limit_mib"),
         ({"api_cpu_limit": 0}, "api_cpu_limit"),
         ({"weak_gate_first_probe_status": 404}, "weak_gate_first_probe_status"),
-        ({"claim_classifications": {"C01": "observation"}}, "claim_classifications"),
+        ({"claim_classifications": {"C01": "inference"}}, "claim_classifications"),
         ({"fidelity_limitation": "it was slow"}, "fidelity_limitation"),
     ],
     ids=["mutable-tag", "zero-memory", "zero-cpu", "unlisted-status", "missing-claims", "prose"],
