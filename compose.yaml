@@ -83,6 +83,8 @@ services:
   # back to. Step 1 names each image from infra/release/manifest.yaml, using the
   # `COLDLINE_RELEASE_TAG` variable so a rollout is one environment change.
   initializer:
+    # The initializer runs the API image, so it names the same release as `api`.
+    image: coldline-api:${COLDLINE_RELEASE_TAG:-3.1.0}
     build:
       context: .
       dockerfile: infra/containers/api.Dockerfile
@@ -105,6 +107,9 @@ services:
     networks: [coldline]
 
   api:
+    # `COLDLINE_RELEASE_TAG` selects the manifest release; unset falls back to the
+    # known-good tag 3.1.0, so a plain `poe start` always runs the known-good build.
+    image: coldline-api:${COLDLINE_RELEASE_TAG:-3.1.0}
     build:
       context: .
       dockerfile: infra/containers/api.Dockerfile
@@ -117,24 +122,39 @@ services:
     ports:
       - "127.0.0.1:${COLDLINE_API_HOST_PORT:-8000}:8000"
     restart: unless-stopped
-    # This probe asks whether the process is alive, not whether it can serve. A
-    # rollout gated on it reports healthy the moment the container starts, and
-    # `up --wait` returns while the new build is still refusing requests. Step 2
-    # decides what the gate should ask, and how long a warm-up it must tolerate.
+    # The gate now asks whether the API can serve, not whether the process is
+    # alive, so `up --wait` returns only once /health/ready answers 200. The
+    # candidate release answers 503 for its 20 s warm-up
+    # (`releases.candidate.ready_delay_seconds` in infra/release/manifest.yaml);
+    # `start_period: 30s` gives that warm-up room without counting the early
+    # refusals as failures, and still leaves margin on a slower host.
     healthcheck:
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=2)",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=2)",
         ]
       interval: 3s
       timeout: 3s
       retries: 20
+      start_period: 30s
+    # Sized from the post-readiness API sample of 81.7 MiB in
+    # docs/fidelity/local-runtime.md, inside the manifest bounds
+    # (memory 256-1024 MiB, cpus 0.25-2.0). 512 MiB is about six times the
+    # sample, which is headroom a single sample from one host needs; 1.0 CPU
+    # lets the API use a whole core under a request burst without taking the
+    # host.
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
     networks: [coldline]
 
   worker:
+    image: coldline-worker:${COLDLINE_RELEASE_TAG:-3.1.0}
     build:
       context: .
       dockerfile: infra/containers/worker.Dockerfile
@@ -156,6 +176,16 @@ services:
       interval: 5s
       timeout: 10s
       retries: 12
+    # Sized from the post-readiness worker sample of 49.7 MiB in
+    # docs/fidelity/local-runtime.md, inside the manifest bounds
+    # (memory 128-512 MiB, cpus 0.25-2.0). 256 MiB is about five times the
+    # sample; the worker processes one message at a time, so half a CPU is
+    # enough and leaves the rest of the core for the API.
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
     networks: [coldline]
 
   jaeger:
