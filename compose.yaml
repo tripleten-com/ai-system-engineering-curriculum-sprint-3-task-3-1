@@ -7,11 +7,8 @@
 # Concepts: Service orchestration, readiness, immutable releases, bounded resources
 # Tools: Docker Compose
 
-# This file is student-editable in Task 3.1. Three things about the first-party
-# services are yours to change, and nothing else: how their images are named,
-# how their health checks decide readiness, and what resources they may use.
-# Keep the service roster, the published host ports, the profiles, and the
-# third-party image digests exactly as supplied; the public checks compare them.
+# Never exported. Known-wrong variant: pinned images and limits are correct, but the
+# API health check still probes liveness. The rollout check must fail on the first probe.
 
 name: coldline-task-3-1
 
@@ -29,8 +26,6 @@ x-coldline-environment: &coldline-environment
 
 services:
   postgres:
-    # pgvector's PostgreSQL 16 image. The dense arm needs the `vector` column
-    # type, which the plain postgres image does not provide.
     image: pgvector/pgvector:pg16@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b
     environment:
       POSTGRES_DB: coldline
@@ -69,9 +64,6 @@ services:
       SERVICES: s3
       DEBUG: "0"
       EAGER_SERVICE_LOADING: "1"
-      # Object contents are not persisted between runs on purpose: the
-      # initializer re-uploads the supplied corpus artifacts idempotently on
-      # every start, so a fresh start and a resumed start agree.
       PERSISTENCE: "0"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:4566/_localstack/health || exit 1"]
@@ -82,13 +74,7 @@ services:
       - "127.0.0.1:${COLDLINE_LOCALSTACK_HOST_PORT:-4566}:4566"
     networks: [coldline]
 
-  # The three first-party services below build from this repository. Today they
-  # have no `image:` name, so every `poe start` rebuilds them and tags the result
-  # `latest`: nobody can say which build is running, and there is nothing to roll
-  # back to. Step 1 names each image from infra/release/manifest.yaml, using the
-  # `COLDLINE_RELEASE_TAG` variable so a rollout is one environment change.
   initializer:
-    # The initializer runs the API image, so it names the same release as `api`.
     image: coldline-api:${COLDLINE_RELEASE_TAG:-3.1.0}
     build:
       context: .
@@ -97,12 +83,6 @@ services:
         COLDLINE_BUILD_VERSION: ${COLDLINE_RELEASE_TAG:-3.1.0}
     command: ["python", "-m", "api.initialize"]
     environment: *coldline-environment
-    # `localstack` is deliberately absent from this list. It belongs to the
-    # `localstack` Compose profile, and a default-profile service that depends on
-    # a profiled service makes the whole project invalid for any command that
-    # does not enable that profile - which broke every plain
-    # `docker compose exec` diagnostic. The initializer waits for object storage
-    # itself instead, so the ordering holds without the profile-crossing edge.
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,8 +92,6 @@ services:
     networks: [coldline]
 
   api:
-    # `COLDLINE_RELEASE_TAG` selects the release; unset falls back to the
-    # manifest's known-good tag, so a plain start always runs 3.1.0.
     image: coldline-api:${COLDLINE_RELEASE_TAG:-3.1.0}
     build:
       context: .
@@ -127,26 +105,19 @@ services:
     ports:
       - "127.0.0.1:${COLDLINE_API_HOST_PORT:-8000}:8000"
     restart: unless-stopped
-    # The gate decides when `up --wait` may return, so it asks the question the
-    # rollout actually needs: can this build serve? `/health/ready` answers 503
-    # while the candidate warms up, and `start_period` covers that warm-up -
-    # 30s against the manifest's `ready_delay_seconds: 20`, so probes that fail
-    # during a normal warm-up do not burn retries or fail the rollout.
+    # Known-wrong variant: the supplied liveness probe is kept, so the gate opens
+    # before the candidate can serve.
     healthcheck:
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=2)",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=2)",
         ]
       interval: 3s
       timeout: 3s
       retries: 20
-      start_period: 30s
-    # The post-readiness sample in docs/fidelity/local-runtime.md is 81.7 MiB for
-    # the API. 512 MiB is inside the manifest's [256, 1024] and leaves room for a
-    # request burst, since one sample from one host is not a peak.
     deploy:
       resources:
         limits:
@@ -182,9 +153,6 @@ services:
       interval: 5s
       timeout: 10s
       retries: 12
-    # The worker's post-readiness sample is 49.7 MiB. 256 MiB is inside the
-    # manifest's [128, 512] with the same headroom reasoning; half a CPU matches
-    # the worker's lighter, poll-driven load next to the API.
     deploy:
       resources:
         limits:
