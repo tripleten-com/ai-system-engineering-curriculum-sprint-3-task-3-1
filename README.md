@@ -70,7 +70,7 @@ poe verify
 | `poe release-status` | Print the running images, the build that answers `/version`, and the limits Docker applied |
 | `poe release-checks` | Run the five release checks against the running stack; they perform one rollout and one rollback |
 | `poe ingest` | Run the supplied baseline corpus ingestion inside the API container |
-| `poe student-tests` | Run your own tests under `tests/student/` |
+| `poe student-tests` | Run the supplied tests under `tests/student/`; this Task permits no additions there |
 | `poe unit` | Run fast isolated behavior tests |
 | `poe contract` | Check interfaces, boundaries, submissions, and repository structure |
 | `poe smoke` | Check the initialized running platform |
@@ -89,7 +89,7 @@ names, waiting on the health check before they return. If the Compose file gives
 
 For Task 3.1, `poe verify` rebuilds and starts the stack, ingests the supplied corpus, builds both
 releases, runs the release checks, then the smoke tests, the end-to-end exception workflow, the
-answer-sheet checks, and your own tests under `tests/student/`.
+answer-sheet checks, and the supplied tests under `tests/student/`.
 
 ## The release manifest
 
@@ -138,7 +138,7 @@ repository root/
     ├── contract/        Interface, release, retrieval, and repository checks
     ├── diagnostics/     Supplied stage inspector
     ├── doubles/         Supplied deterministic test doubles
-    ├── student/         Your own tests
+    ├── student/         Supplied student tests; no additions in this Task
     ├── smoke/           Running-platform checks
     └── e2e/             Supplied workflow tools and checks
 ```
